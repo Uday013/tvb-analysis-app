@@ -1,20 +1,28 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import datetime
+import mysql.connector
 
-# ----- Sample Data -----
-# Simulating supplier and product performance data
-data = {
-    'Supplier': ['Supplier A', 'Supplier B', 'Supplier C', 'Supplier A', 'Supplier B'],
-    'Product': ['Shirt', 'Jeans', 'Jacket', 'T-shirt', 'Skirt'],
-    'Expected Margin (%)': [30, 25, 35, 20, 40],
-    'Actual Margin (%)': [28, 22, 37, 18, 38],
-    'Units Sold': [120, 90, 60, 200, 150],
-    'Cost per Unit': [10, 20, 30, 8, 12],
-    'Date Sold': pd.date_range(start='2025-05-01', periods=5, freq='D')
-}
-df = pd.DataFrame(data)
+# --- MySQL Connection ---
+def get_connection():
+    return mysql.connector.connect(
+        host=st.secrets["mysql"]["host"],
+        user=st.secrets["mysql"]["user"],
+        password=st.secrets["mysql"]["password"],
+        database=st.secrets["mysql"]["database"]
+    )
+
+# --- Fetch Data from MySQL ---
+@st.cache_data
+def fetch_data():
+    conn = get_connection()
+    query = "SELECT * FROM supplier_sales"
+    df = pd.read_sql(query, conn)
+    conn.close()
+    return df
+
+# --- Load Data ---
+df = fetch_data()
+df['Date Sold'] = pd.to_datetime(df['Date Sold'])
 
 # ----- Sidebar Filters -----
 st.sidebar.header("Filter Data")
@@ -59,4 +67,3 @@ st.line_chart(sales_over_time.set_index('Date Sold'))
 # Detailed Table
 st.subheader("Detailed Performance Table")
 st.dataframe(filtered_df)
-
