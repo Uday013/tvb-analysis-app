@@ -59,4 +59,3 @@ st.line_chart(sales_over_time.set_index('Date Sold'))
 # Detailed Table
 st.subheader("Detailed Performance Table")
 st.dataframe(filtered_df)
-
